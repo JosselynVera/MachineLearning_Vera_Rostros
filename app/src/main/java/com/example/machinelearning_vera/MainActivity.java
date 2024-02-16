@@ -18,7 +18,8 @@ import android.Manifest;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.machinelearning_vera.ml.Modeloflowers;
+import com.example.machinelearning_vera.ml.Modeloflowerss;
+import com.example.machinelearning_vera.ml.Modelorostros;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.mlkit.vision.common.InputImage;
@@ -183,13 +184,28 @@ public class MainActivity extends AppCompatActivity implements OnSuccessListener
                 .addOnFailureListener(this);
     }
 
-    public void PersonalizedModel(View v){
+    /*public void PersonalizedModel(View v){
         try {
             String[] etiquetas = {"Margaritas", "Dientes de León", "Rosas", "Girasoles", "Tulipanes"};
-            Modeloflowers model = Modeloflowers.newInstance(getApplicationContext());
+            Modeloflowerss model = Modeloflowerss.newInstance(getApplicationContext());
             TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 224, 224, 3}, DataType.FLOAT32);
             inputFeature0.loadBuffer(convertirImagenATensorBuffer(mSelectedImage));
-            Modeloflowers.Outputs outputs = model.process(inputFeature0);
+            Modeloflowerss.Outputs outputs = model.process(inputFeature0);
+            TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
+            txtResults.setText(obtenerEtiquetayProbabilidad(etiquetas, outputFeature0.getFloatArray()));
+            model.close();
+        } catch (Exception e) {
+            txtResults.setText(e.getMessage());
+        }
+    }*/
+
+    public void PersonalizedModel(View v){
+        try {
+            String[] etiquetas = {"Morales", "Reyes", "Alvarez", "Vera", "Navas", "Triana"};
+            Modelorostros model = Modelorostros.newInstance(getApplicationContext());
+            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 224, 224, 3}, DataType.FLOAT32);
+            inputFeature0.loadBuffer(convertirImagenATensorBuffer(mSelectedImage));
+            Modelorostros.Outputs outputs = model.process(inputFeature0);
             TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
             txtResults.setText(obtenerEtiquetayProbabilidad(etiquetas, outputFeature0.getFloatArray()));
             model.close();
