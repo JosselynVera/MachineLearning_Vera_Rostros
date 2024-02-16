@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
+import android.icu.text.DecimalFormat;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -17,6 +18,7 @@ import android.Manifest;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.machinelearning_vera.ml.Modeloflowers;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.mlkit.vision.common.InputImage;
@@ -33,7 +35,12 @@ import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
+import org.tensorflow.lite.DataType;
+import org.tensorflow.lite.support.tensorbuffer.TensorBuffer;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnSuccessListener<Text>, OnFailureListener {
@@ -175,4 +182,51 @@ public class MainActivity extends AppCompatActivity implements OnSuccessListener
                 })
                 .addOnFailureListener(this);
     }
+
+    public void PersonalizedModel(View v){
+        try {
+            String[] etiquetas = {"Margaritas", "Dientes de León", "Rosas", "Girasoles", "Tulipanes"};
+            Modeloflowers model = Modeloflowers.newInstance(getApplicationContext());
+            TensorBuffer inputFeature0 = TensorBuffer.createFixedSize(new int[]{1, 224, 224, 3}, DataType.FLOAT32);
+            inputFeature0.loadBuffer(convertirImagenATensorBuffer(mSelectedImage));
+            Modeloflowers.Outputs outputs = model.process(inputFeature0);
+            TensorBuffer outputFeature0 = outputs.getOutputFeature0AsTensorBuffer();
+            txtResults.setText(obtenerEtiquetayProbabilidad(etiquetas, outputFeature0.getFloatArray()));
+            model.close();
+        } catch (Exception e) {
+            txtResults.setText(e.getMessage());
+        }
+    }
+
+    public ByteBuffer convertirImagenATensorBuffer(Bitmap mSelectedImage){
+        Bitmap imagen = Bitmap.createScaledBitmap(mSelectedImage, 224, 224, true);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * 224 * 224 * 3);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        int[] intValues = new int[224 * 224];
+        imagen.getPixels(intValues, 0, imagen.getWidth(), 0, 0, imagen.getWidth(), imagen.getHeight());
+        int pixel = 0;
+        for(int i = 0; i < imagen.getHeight(); i ++){
+            for(int j = 0; j < imagen.getWidth(); j++){
+                int val = intValues[pixel++]; // RGB
+                byteBuffer.putFloat(((val >> 16) & 0xFF) * (1.f / 255.f));
+                byteBuffer.putFloat(((val >> 8) & 0xFF) * (1.f / 255.f));
+                byteBuffer.putFloat((val & 0xFF) * (1.f / 255.f));
+            }
+        }
+        return byteBuffer;
+    }
+
+    public String obtenerEtiquetayProbabilidad(String[] etiquetas, float[] probabilidades){
+        float valorMayor=Float.MIN_VALUE;
+        int pos=-1;
+        for (int i = 0; i < probabilidades.length; i++) {
+            if (probabilidades[i] > valorMayor) {
+                valorMayor = probabilidades[i];
+                pos = i;
+            }
+        }
+        return "Predicción: " + etiquetas[pos] + ", Probabilidad: " +
+                (new DecimalFormat("0.00").format(probabilidades[pos] * 100)) + "%";
+    }
+
 }
